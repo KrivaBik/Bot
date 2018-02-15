@@ -6,8 +6,56 @@ const bot =new TelegramBot(TOKEN, {
     polling:true
 });
 
+var KB={
+    currency:'курс',
+    picture:'photo',
+    cat:'cat',
+    car:'car',
+    back:'back'
+};
 bot.onText(/\/start/, msg => {
-    const text='салам крыса';
-    console.log(msg);
-    bot.sendMessage(msg.chat.id, text)
+    sendgreeting(msg);
 });
+
+ bot.on('message', msg=>{
+     switch (msg.text){
+         case KB.picture:
+             sendPictureScreen(msg.chat.id);
+             break;
+         case KB.currency:
+             break;
+         case KB.car:
+         case KB.cat:
+         break;
+         case KB.back:
+             sendgreeting(msg, false);
+             break;
+
+
+     }
+
+ });
+
+ function sendPictureScreen(chatId) {
+     bot.sendMessage(chatId,'viberi tip pecture', {
+         reply_markup:{
+             keyboard:[
+                 [KB.car,KB.cat],
+                 [KB.back]
+             ]
+         }
+     })
+ }
+ function sendgreeting(msg, sendHello=true) {
+     const text= sendHello
+     ?'Салам,'+msg.from.first_name+'-krisa'
+     :'sobaka ti';
+     bot.sendMessage(msg.chat.id, text, {
+         reply_markup:{
+             keyboard:[
+                 [KB.currency, KB.picture]
+             ]
+         }
+     })
+ }
+
