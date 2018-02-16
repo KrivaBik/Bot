@@ -27,13 +27,35 @@ const PicScrs={
         'car3.jpg'
     ]
 };
-
+var kbActions={
+    registration:'Зарегистироваться',
+    connectToDB:'Подключиться к БД',
+    menu:'menu'
+};
 
 bot.onText(/\/start/, msg => {
-    sendgreeting(msg);
+    console.log(msg.chat.id);
+            bot.sendMessage(msg.chat.id, "Здравствуйте! \n Пожалуйста, зарегистрируйтесь для получения сообщений.", {
+                reply_markup: {
+                    keyboard: [
+                        [{text:kbActions.registration , "request_contact": true}]
+                    ],
+                    one_time_keyboard: true
+                }
+            });
+
+});
+bot.on('contact',msg=>{
+    var registeredUsers=JSON.parse(fs.readFileSync(__dirname+'/idBase.json'));
+    if(!registeredUsers[msg.contact.phone_number]){
+        registeredUsers[msg.contact.phone_number]=msg.chat.id;
+    }
+    fs.writeFile((__dirname+'/idBase.json'),JSON.stringify(registeredUsers));
+
 });
 
  bot.on('message', msg=>{
+
      switch (msg.text){
          case KB.picture:
              sendPictureScreen(msg.chat.id);
@@ -46,7 +68,7 @@ bot.onText(/\/start/, msg => {
              sendPictureByName(msg.chat.id, msg.text);
          break;
          case KB.back:
-             sendgreeting(msg, false);
+             sendgreeting2(msg, false);
              break;
 
 
@@ -89,18 +111,23 @@ bot.onText(/\/start/, msg => {
          }
      })
  }
- function sendgreeting(msg, sendHello=true) {
-     const text= sendHello
-     ?'Салам,'+msg.from.first_name+'-krisa'
-     :'sobaka ti';
-     bot.sendMessage(msg.chat.id, text, {
-         reply_markup:{
-             keyboard:[
-                 [KB.currency, KB.picture]
-             ]
-         }
-     })
+ function sendgreeting(msg) {
+
+
  }
+function sendgreeting2(msg) {
+
+    const text= sendHello
+        ?'Салам,'+msg.from.first_name+'-krisa'
+        :'sobaka ti';
+    bot.sendMessage(msg.chat.id, text, {
+        reply_markup:{
+            keyboard:[
+                [KB.currency, KB.picture]
+            ]
+        }
+    })
+}
 
 function sendPictureByName(catId, picName) {
      var srcs=PicScrs[picName];
@@ -130,5 +157,8 @@ function sendCurrencyScreen(chatId) {
              ]
          }
      })
+    
+}
+function checkIn() {
     
 }
