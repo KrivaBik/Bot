@@ -1,11 +1,13 @@
 const TelegramBot=require('node-telegram-bot-api');
+const request=require('request');
+const _=require('lodash');
+const fs=require('fs');
 const TOKEN = '526588233:AAHhtkEj3Jq6A7pP048DItlam9k03IR99vA';
 process.env["NTBA_FIX_319"] = 1;
 
 const bot =new TelegramBot(TOKEN, {
     polling:true
 });
-
 var KB={
     currency:'курс',
     picture:'photo',
@@ -13,6 +15,20 @@ var KB={
     car:'car',
     back:'back'
 };
+const PicScrs={
+  [KB.cat]:[
+      'cat1.jpg',
+      'cat2.jpg',
+      'cat3.jpg'
+  ],
+    [KB.car]:[
+        'car1.jpg',
+        'car2.jpg',
+        'car3.jpg'
+    ]
+};
+
+
 bot.onText(/\/start/, msg => {
     sendgreeting(msg);
 });
@@ -23,9 +39,11 @@ bot.onText(/\/start/, msg => {
              sendPictureScreen(msg.chat.id);
              break;
          case KB.currency:
+             sendCurrencyScreen(msg.chat.id);
              break;
          case KB.car:
          case KB.cat:
+             sendPictureByName(msg.chat.id, msg.text);
          break;
          case KB.back:
              sendgreeting(msg, false);
@@ -33,6 +51,31 @@ bot.onText(/\/start/, msg => {
 
 
      }
+
+ });
+ bot.on('callback_query', query=>{
+    // console.log(JSON.stringify(query,null,2));
+     const base= query.data;
+     const symbol = 'RUB';
+
+     bot.answerCallbackQuery({
+        callback_query_id:query.id,
+        text:'ok'
+     });
+     request('https://api.fixer.io/latest?symbols='+symbol+'&base='+base, (err,res, body)=>{
+         if (err) throw new Error(err);
+         if(res.statusCode===200){
+             const  currencyData=JSON.parse(body);
+
+             const html='<b>1'+base+'</b>-<em>'+currencyData.rates[symbol]+symbol+'</em>';
+
+             bot.sendMessage(query.message.chat.id, html, {
+               parse_mode:'HTML'
+             })
+         }
+
+     });
+
 
  });
 
@@ -59,3 +102,33 @@ bot.onText(/\/start/, msg => {
      })
  }
 
+function sendPictureByName(catId, picName) {
+     var srcs=PicScrs[picName];
+     var src=srcs[_.random(0, srcs.length-1)];
+     bot.sendMessage(catId,"pfuhe;f.////");
+     fs.readFile(__dirname+'/pictures/'+src,(err,picture)=>{
+         if (err) throw new Error(err);
+         bot.sendPhoto(catId,picture).then(()=>{
+             bot.sendMessage(catId,"pfuhe;f.////");
+         });
+     })
+
+}
+
+function sendCurrencyScreen(chatId) {
+     bot.sendMessage(chatId, 'viberi kurs valut',{
+         reply_markup:{
+             inline_keyboard:[
+                 [{
+                 text:'dollar',
+                     callback_data:'USD'
+                 }],
+                 [{
+                     text:'evro',
+                     callback_data:'EUR'
+                 }]
+             ]
+         }
+     })
+    
+}
