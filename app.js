@@ -2,8 +2,42 @@ const TelegramBot=require('node-telegram-bot-api');
 const request=require('request');
 const _=require('lodash');
 const fs=require('fs');
+var CronJob = require('cron').CronJob;
 const TOKEN = '526588233:AAHhtkEj3Jq6A7pP048DItlam9k03IR99vA';
-process.env["NTBA_FIX_319"] = 1;
+
+var listUsers =JSON.parse(fs.readFileSync(__dirname+'/idBase.json'));
+
+try {
+    var appConfig=require ('./appConfig');
+    var configFileName=process.argv[2]|| "configPro";
+    appConfig.setAppConfigName(configFileName);
+    appConfig.loadAppConfig();
+} catch (e){
+    console.log("FAILED TO LOAD appConfig! APP START IMPOSSIBLE! REASON:",e.message);
+    return;
+}
+
+var appPort= appConfig.getAppConfigParam("appPort") || 80;
+var Schedule= appConfig.getAppConfigParam("Schedule");
+startScheduleMsg(Schedule);
+
+try{
+    let dataMeal=JSON.parse(fs.readFileSync(__dirname+'/dataMeal.json'));
+    if(!dataMeal||dataMeal.length==0) return;
+    console.log(dataMeal,dataMeal.length);
+
+    for (var i=0;i<dataMeal.length;i++){
+        var dataMealI=dataMeal[i];
+        startScheduleMeals(dataMealI);
+        console.log(i);
+    }
+
+}catch (e){
+    console.log("Nooooo",e.message);
+}
+
+
+
 
 const bot =new TelegramBot(TOKEN, {
     polling:true
@@ -32,29 +66,37 @@ var kbActions={
     connectToDB:'Подключиться к БД',
     menu:'menu'
 };
+var registeredUsers=JSON.parse(fs.readFileSync(__dirname+'/idBase.json'));
+
+
+
 
 bot.onText(/\/start/, msg => {
-    console.log(msg.chat.id);
-            bot.sendMessage(msg.chat.id, "Здравствуйте! \n Пожалуйста, зарегистрируйтесь для получения сообщений.", {
-                reply_markup: {
-                    keyboard: [
-                        [{text:kbActions.registration , "request_contact": true}]
-                    ],
-                    one_time_keyboard: true
-                }
-            });
-
+    var mesg, objKB;
+    if(!registeredUsers[msg.chat.id]){
+        mesg="Здравствуйте! \n Пожалуйста, зарегистрируйтесь для получения сообщений.";
+        objKB ={reply_markup: {
+            keyboard: [
+                [{text:kbActions.registration , "request_contact": true}]
+            ],
+                one_time_keyboard: true
+        }};
+    }else {
+        mesg="Салам "+msg.chat.first_name;
+    }
+    bot.sendMessage(msg.chat.id, mesg, objKB);
 });
 bot.on('contact',msg=>{
-    var registeredUsers=JSON.parse(fs.readFileSync(__dirname+'/idBase.json'));
-    if(!registeredUsers[msg.contact.phone_number]){
-        registeredUsers[msg.contact.phone_number]=msg.chat.id;
-    }
-    fs.writeFile((__dirname+'/idBase.json'),JSON.stringify(registeredUsers));
 
+    if(!registeredUsers[msg.chat.id]){
+        registeredUsers[msg.chat.id]=msg.contact.phone_number;
+    }
+    fs.writeFile((__dirname+'/idBase.json'),JSON.stringify(registeredUsers),function () {
+        bot.sendMessage(msg.chat.id,"Вы успешно зарегистрированы");
+    })
 });
 
- bot.on('message', msg=>{
+bot.on('message', msg=>{
 
      switch (msg.text){
          case KB.picture:
@@ -75,7 +117,7 @@ bot.on('contact',msg=>{
      }
 
  });
- bot.on('callback_query', query=>{
+bot.on('callback_query', query=>{
     // console.log(JSON.stringify(query,null,2));
      const base= query.data;
      const symbol = 'RUB';
@@ -101,6 +143,28 @@ bot.on('contact',msg=>{
 
  });
 
+function startScheduleMsg(SCH,){
+    new CronJob(SCH,
+        function() {
+            for (k in listUsers){
+                bot.sendMessage(k,'Все в порядке?');
+            }
+        }
+        , null, true, 'Europe/Kiev');
+}
+function startScheduleMeals(dataMeal){
+    console.log('startScheduleMeals',dataMeal);
+    let job=new CronJob(dataMeal.schedule,
+        function() {
+            for (k in listUsers){
+                var rand = Math.floor(Math.random() * dataMeal.meals.length);
+                bot.sendMessage(k,dataMeal.meals[rand]);
+            }
+        }
+        , null, true, 'Europe/Kiev');
+}
+
+
  function sendPictureScreen(chatId) {
      bot.sendMessage(chatId,'viberi tip pecture', {
          reply_markup:{
@@ -111,10 +175,7 @@ bot.on('contact',msg=>{
          }
      })
  }
- function sendgreeting(msg) {
 
-
- }
 function sendgreeting2(msg) {
 
     const text= sendHello
@@ -157,8 +218,5 @@ function sendCurrencyScreen(chatId) {
              ]
          }
      })
-    
-}
-function checkIn() {
     
 }
