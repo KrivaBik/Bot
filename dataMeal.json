@@ -1,14 +1,39 @@
 [
   {"schedule":"1 * * * * *",
+    "welcome":"Завтрак для вас",
     "meals":[
-      "1",
-      "2",
-      "3"
+      "brf1.jpg",
+      "brf2.jpg",
+      "brf3.jpg",
+      "brf4.jpg",
+      "brf5.jpg",
+      "brf6.jpg",
+      "brf7.jpg",
+      "brf8.jpg",
+      "brf9.jpg",
+      "brf10.jpg",
+      "brf11.jpg",
+      "brf12.jpg",
+      "brf13.jpg",
+      "brf14.jpg",
+      "brf15.jpg",
+      "brf16.jpg"
     ]},
-  {"schedule":"5 * * * * *",
+  {"schedule":"10 * * * * *",
+    "welcome":"Ужин для вас",
     "meals":[
-      "4",
-      "5",
-      "6"
+      "dnr1.jpg",
+      "dnr2.jpg",
+      "dnr3.jpg",
+      "dnr4.jpg",
+      "dnr5.jpg",
+      "dnr6.jpg",
+      "dnr7.jpg",
+      "dnr8.jpg",
+      "dnr9.jpg",
+      "dnr10.jpg",
+      "dnr11.jpg",
+      "dnr12.jpg",
+      "dnr13.jpg"
     ]}
 ]

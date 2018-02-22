@@ -2,8 +2,11 @@ const TelegramBot=require('node-telegram-bot-api');
 const request=require('request');
 const _=require('lodash');
 const fs=require('fs');
+var logger=require('./logger');
 var CronJob = require('cron').CronJob;
 const TOKEN = '526588233:AAHhtkEj3Jq6A7pP048DItlam9k03IR99vA';
+
+
 
 var listUsers =JSON.parse(fs.readFileSync(__dirname+'/idBase.json'));
 
@@ -24,7 +27,6 @@ startScheduleMsg(Schedule);
 try{
     let dataMeal=JSON.parse(fs.readFileSync(__dirname+'/dataMeal.json'));
     if(!dataMeal||dataMeal.length==0) return;
-    console.log(dataMeal,dataMeal.length);
 
     for (var i=0;i<dataMeal.length;i++){
         var dataMealI=dataMeal[i];
@@ -56,9 +58,7 @@ const PicScrs={
       'cat3.jpg'
   ],
     [KB.car]:[
-        'car1.jpg',
-        'car2.jpg',
-        'car3.jpg'
+        'brf1.jpg'
     ]
 };
 var kbActions={
@@ -74,7 +74,7 @@ var registeredUsers=JSON.parse(fs.readFileSync(__dirname+'/idBase.json'));
 bot.onText(/\/start/, msg => {
     var mesg, objKB;
     if(!registeredUsers[msg.chat.id]){
-        mesg="Здравствуйте! \n Пожалуйста, зарегистрируйтесь для получения сообщений.";
+        mesg="Здравствуйте! \n Пожалуйста, зарегистрируйтесь для реццептов полезных и быстрых рецептов";
         objKB ={reply_markup: {
             keyboard: [
                 [{text:kbActions.registration , "request_contact": true}]
@@ -92,7 +92,7 @@ bot.on('contact',msg=>{
         registeredUsers[msg.chat.id]=msg.contact.phone_number;
     }
     fs.writeFile((__dirname+'/idBase.json'),JSON.stringify(registeredUsers),function () {
-        bot.sendMessage(msg.chat.id,"Вы успешно зарегистрированы");
+        bot.sendMessage(msg.chat.id,"Вы успешно зарегистрированы, ожидайте сообщение с рецептом)");
     })
 });
 
@@ -153,12 +153,20 @@ function startScheduleMsg(SCH,){
         , null, true, 'Europe/Kiev');
 }
 function startScheduleMeals(dataMeal){
-    console.log('startScheduleMeals',dataMeal);
     let job=new CronJob(dataMeal.schedule,
         function() {
             for (k in listUsers){
                 var rand = Math.floor(Math.random() * dataMeal.meals.length);
-                bot.sendMessage(k,dataMeal.meals[rand]);
+                // bot.sendMessage(k,dataMeal.meals[rand]);
+
+                var src=dataMeal.meals[rand];
+                bot.sendMessage(k,dataMeal.welcome);
+                fs.readFile(__dirname+'/pictures/'+src,(err,picture)=>{
+                    if (err) throw new Error(err);
+                    bot.sendPhoto(k,picture).then(()=>{
+                        bot.sendMessage(k,"Приятного апетита");
+                    });
+                })
             }
         }
         , null, true, 'Europe/Kiev');
@@ -193,13 +201,24 @@ function sendgreeting2(msg) {
 function sendPictureByName(catId, picName) {
      var srcs=PicScrs[picName];
      var src=srcs[_.random(0, srcs.length-1)];
-     bot.sendMessage(catId,"pfuhe;f.////");
+     bot.sendMessage(catId,"Загружаю");
      fs.readFile(__dirname+'/pictures/'+src,(err,picture)=>{
          if (err) throw new Error(err);
          bot.sendPhoto(catId,picture).then(()=>{
-             bot.sendMessage(catId,"pfuhe;f.////");
+             bot.sendMessage(catId,"Приятного апетита");
          });
      })
+
+}
+function sendPictureMealByName(catId, picName) {
+    var src=picName;
+    bot.sendMessage(catId,"Загружаю");
+    fs.readFile(__dirname+'/pictures/'+src,(err,picture)=>{
+        if (err) throw new Error(err);
+        bot.sendPhoto(catId,picture).then(()=>{
+            bot.sendMessage(catId,"Приятного апетита");
+        });
+    })
 
 }
 
