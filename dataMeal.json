@@ -1,5 +1,5 @@
 [
-  {"schedule":"1 * * * * *",
+  {"schedule":"1 1 * * * *",
     "welcome":"Завтрак для вас",
     "meals":[
       "brf1.jpg",
@@ -19,7 +19,7 @@
       "brf15.jpg",
       "brf16.jpg"
     ]},
-  {"schedule":"10 * * * * *",
+  {"schedule":"10 1 * * * *",
     "welcome":"Ужин для вас",
     "meals":[
       "dnr1.jpg",
