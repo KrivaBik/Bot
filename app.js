@@ -374,4 +374,7 @@ function resultCalcCal(Id) {
         });
     }
 }
+function lol() {
+    console.log('lol');
+}
 
